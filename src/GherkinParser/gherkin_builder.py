@@ -121,7 +121,7 @@ def build_gherkin_model(source: PathLike[str], content: Optional[str] = None) ->
 
                     datatable = step_argument.get("dataTable", None)
                     if datatable is not None:
-                        #rows = [[v.get("value") for v in r.get("cells")] for r in datatable["rows"]]
+                        # rows = [[v.get("value") for v in r.get("cells")] for r in datatable["rows"]]
                         args = (f"&{{{{{escape(repr(datatable))}}}}}",)
 
                 keyword_call = KeywordCall.from_params(

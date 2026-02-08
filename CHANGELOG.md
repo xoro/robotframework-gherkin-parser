@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.4.5] - 2026-02-08
+
+### Chore
+
+- Add treefmt configuration for automated code formatting
+- Format all source files with treefmt (Python, TypeScript, JSON, YAML, Robot Framework)
+- Configure formatters: black (Python), prettier (TypeScript/JSON/YAML/Markdown), robotidy (Robot Framework), taplo (TOML)
+
 ## [0.4.4] - 2026-02-08
 
 ### Security Fixes

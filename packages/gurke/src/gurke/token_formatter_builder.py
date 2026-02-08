@@ -33,11 +33,18 @@ class TokenFormatterBuilder(AstBuilder):
                 ")",
                 token.matched_type,
                 ":",
-                "".join(
-                    ["(", token.matched_keyword_type if token.matched_keyword_type else "", ")", token.matched_keyword]
-                )
-                if token.matched_keyword
-                else "",
+                (
+                    "".join(
+                        [
+                            "(",
+                            token.matched_keyword_type if token.matched_keyword_type else "",
+                            ")",
+                            token.matched_keyword,
+                        ]
+                    )
+                    if token.matched_keyword
+                    else ""
+                ),
                 "/",
                 (token.matched_text if token.matched_text else ""),
                 "/",

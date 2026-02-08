@@ -21,6 +21,7 @@ from scripts.tools import get_version
 
 PRE_RELEASE = True
 
+
 def main() -> None:
     dist_path = Path("./dist").absolute()
     if not dist_path.exists():

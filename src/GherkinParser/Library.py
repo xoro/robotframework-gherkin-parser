@@ -95,17 +95,11 @@ class Library(ListenerV3):
         if kws:
             if data.setup.name:
                 data.setup.config(
-                    name="BuiltIn.Run Keywords",
-                    args=(*kws, "AND", data.setup.name, *data.setup.args),
-                    lineno = lineno
+                    name="BuiltIn.Run Keywords", args=(*kws, "AND", data.setup.name, *data.setup.args), lineno=lineno
                 )
 
             else:
-                data.setup.config(
-                    name="BuiltIn.Run Keywords",
-                    args=(*kws,),
-                    lineno = lineno
-                )
+                data.setup.config(name="BuiltIn.Run Keywords", args=(*kws,), lineno=lineno)
 
         kws = []
 
@@ -119,15 +113,11 @@ class Library(ListenerV3):
                 data.teardown.config(
                     name="BuiltIn.Run Keywords",
                     args=(*kws, "AND", data.teardown.name, *data.teardown.args),
-                    lineno = lineno
+                    lineno=lineno,
                 )
 
             else:
-                data.teardown.config(
-                    name="BuiltIn.Run Keywords",
-                    args=(*kws,),
-                    lineno = lineno
-                )
+                data.teardown.config(name="BuiltIn.Run Keywords", args=(*kws,), lineno=lineno)
 
     def start_suite(self, data: running.TestSuite, result: result.TestSuite) -> None:
         self._create_setup_and_teardown(data, ("before-suite", "before-feature"))
@@ -139,7 +129,6 @@ class Library(ListenerV3):
     #      # self.call_hooks(("before-keyword", "before-step"))
     #     # if result.tags.match("gerkin:step:docstring"):
     #     #     data.args = (1,2)
-
 
     # def end_keyword(self, data: running.Keyword, result: result.Keyword) -> None:
     #     # self.call_hooks(("after-keyword", "after-step"))

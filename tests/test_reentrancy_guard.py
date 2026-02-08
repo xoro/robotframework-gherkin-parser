@@ -19,41 +19,48 @@ import importlib.util
 repo_root = Path(__file__).parent.parent
 
 # Mock Robot Framework modules BEFORE importing Library
-sys.modules['robot'] = MagicMock()
-sys.modules['robot.result'] = MagicMock()
-sys.modules['robot.running'] = MagicMock()
-sys.modules['robot.running.builder'] = MagicMock()
-sys.modules['robot.running.builder.settings'] = MagicMock()
-sys.modules['robot.running.builder.transformers'] = MagicMock()
-sys.modules['robot.api'] = MagicMock()
-sys.modules['robot.api.deco'] = MagicMock()
-sys.modules['robot.api.interfaces'] = MagicMock()
-sys.modules['robot.libraries'] = MagicMock()
-sys.modules['robot.libraries.BuiltIn'] = MagicMock()
+sys.modules["robot"] = MagicMock()
+sys.modules["robot.result"] = MagicMock()
+sys.modules["robot.running"] = MagicMock()
+sys.modules["robot.running.builder"] = MagicMock()
+sys.modules["robot.running.builder.settings"] = MagicMock()
+sys.modules["robot.running.builder.transformers"] = MagicMock()
+sys.modules["robot.api"] = MagicMock()
+sys.modules["robot.api.deco"] = MagicMock()
+sys.modules["robot.api.interfaces"] = MagicMock()
+sys.modules["robot.libraries"] = MagicMock()
+sys.modules["robot.libraries.BuiltIn"] = MagicMock()
+
 
 # Mock the library decorator to pass through
 def mock_library(*args, **kwargs):
     def decorator(cls):
         return cls
+
     return decorator
-sys.modules['robot.api.deco'].library = mock_library
+
+
+sys.modules["robot.api.deco"].library = mock_library
+
 
 # Mock ListenerV3 as a class
 class MockListenerV3:
     pass
-sys.modules['robot.api.interfaces'].ListenerV3 = MockListenerV3
+
+
+sys.modules["robot.api.interfaces"].ListenerV3 = MockListenerV3
 
 # Create mock BuiltIn with EXECUTION_CONTEXTS
 mock_builtin_module = MagicMock()
 mock_builtin_module.EXECUTION_CONTEXTS = MagicMock()
 mock_builtin_module.BuiltIn = MagicMock
-sys.modules['robot.libraries.BuiltIn'] = mock_builtin_module
+sys.modules["robot.libraries.BuiltIn"] = mock_builtin_module
 
 # Import Library.py directly without going through package __init__.py
 library_path = repo_root / "src" / "GherkinParser" / "Library.py"
 spec = importlib.util.spec_from_file_location("GherkinParser.Library", library_path)
 library_module = importlib.util.module_from_spec(spec)
-sys.modules['GherkinParser.Library'] = library_module
+sys.modules["GherkinParser.Library"] = library_module
 spec.loader.exec_module(library_module)
 
 Library = library_module.Library
@@ -93,12 +100,12 @@ class TestReentrancyGuard(unittest.TestCase):
         mock_context.get_runner.return_value = mock_runner
 
         # Patch EXECUTION_CONTEXTS in the Library module
-        self.exec_contexts_patcher = patch.object(library_module, 'EXECUTION_CONTEXTS')
+        self.exec_contexts_patcher = patch.object(library_module, "EXECUTION_CONTEXTS")
         mock_exec_contexts = self.exec_contexts_patcher.start()
         mock_exec_contexts.current = mock_context
 
         # Create mock BuiltIn
-        self.builtin_patcher = patch.object(library_module, 'BuiltIn')
+        self.builtin_patcher = patch.object(library_module, "BuiltIn")
         mock_builtin_class = self.builtin_patcher.start()
         self.builtin_mock = MagicMock()
         mock_builtin_class.return_value = self.builtin_mock
@@ -132,12 +139,14 @@ class TestReentrancyGuard(unittest.TestCase):
 
         # Assert that run_keyword was called exactly once
         # Without the guard, it would be called multiple times (up to max_reentries)
-        self.assertEqual(self.builtin_mock.run_keyword.call_count, 1,
-                         "Hook should be executed exactly once; reentrancy should be blocked")
+        self.assertEqual(
+            self.builtin_mock.run_keyword.call_count,
+            1,
+            "Hook should be executed exactly once; reentrancy should be blocked",
+        )
 
         # Verify reentry attempts were made but blocked
-        self.assertEqual(self.reentry_count, 1,
-                         "Reentrancy guard should prevent additional hook executions")
+        self.assertEqual(self.reentry_count, 1, "Reentrancy guard should prevent additional hook executions")
 
     def test_reentrancy_guard_resets_after_completion(self):
         """Verify that the reentrancy guard is properly reset after call_hooks completes"""
@@ -153,8 +162,9 @@ class TestReentrancyGuard(unittest.TestCase):
         self.assertEqual(self.builtin_mock.run_keyword.call_count, 1)
 
         # Verify guard is reset to False
-        self.assertFalse(self.library_instance._in_call_hooks,
-                        "Reentrancy guard should be reset to False after completion")
+        self.assertFalse(
+            self.library_instance._in_call_hooks, "Reentrancy guard should be reset to False after completion"
+        )
 
         # Second call should also succeed (guard was properly reset)
         self.builtin_mock.run_keyword.reset_mock()
@@ -179,8 +189,9 @@ class TestReentrancyGuard(unittest.TestCase):
             pass  # Exception may be raised, which is fine
 
         # Verify guard is reset to False even after exception
-        self.assertFalse(self.library_instance._in_call_hooks,
-                        "Reentrancy guard should be reset to False even after exception")
+        self.assertFalse(
+            self.library_instance._in_call_hooks, "Reentrancy guard should be reset to False even after exception"
+        )
 
         # Verify another call can proceed (guard was properly reset)
         self.builtin_mock.run_keyword.side_effect = None
@@ -201,8 +212,9 @@ class TestReentrancyGuard(unittest.TestCase):
         self.library_instance.call_hooks("before-test")
 
         # Verify no keywords were executed
-        self.assertEqual(self.builtin_mock.run_keyword.call_count, 0,
-                        "No hooks should execute when reentrancy guard is active")
+        self.assertEqual(
+            self.builtin_mock.run_keyword.call_count, 0, "No hooks should execute when reentrancy guard is active"
+        )
 
     def test_guard_inactive_when_hooks_disabled(self):
         """Verify that when hooks are disabled, the guard logic is not relevant"""

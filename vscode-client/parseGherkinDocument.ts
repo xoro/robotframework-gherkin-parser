@@ -39,7 +39,7 @@ export function parseGherkinDocument(gherkinSource: string): ParseResult {
     }
 
     return {
-        error: error as Errors.GherkinException,
+      error: error as Errors.GherkinException,
     };
   }
 }

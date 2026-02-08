@@ -111,7 +111,7 @@ def iter_files(
 ) -> Generator[Path, None, None]:
     """
     Recursively iterate over files in a directory tree.
-    
+
     Args:
         path: Root path to scan
         patterns: Glob patterns to match files (None = all files)

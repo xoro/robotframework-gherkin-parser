@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026, Timo Pallach (timo@pallach.de).
+
+# Use .git/config to find the tree root automatically
+tree-root-file = ".git/config"
+
+# Exclude files that should not be formatted
+excludes = [
+  # Specific config files with no formatter
+  ".gitattributes",
+  ".prettierignore",
+  "LICENSE",
+  # File types with no formatter
+  "*.feature",      # Gherkin BDD files (no formatter by design)
+  "*.gitignore",    # Git ignore files (no formatter needed)
+  "*.lock",         # package-lock.json (generated, should not format)
+  "*.svg",          # SVG images (binary/generated)
+  "*.png",          # PNG images (binary)
+  "*.txt",          # Text files (LICENSE.txt, bundled_requirements.txt)
+  "*.berp",         # Gherkin grammar files
+  "*.razor",        # Gherkin grammar template files
+  "*.tmLanguage",   # TextMate grammar files
+  "**/Dockerfile*", # Dockerfiles (no formatter, only linter)
+]
+
+[formatter.black]
+command = "black"
+includes = ["*.py"]
+options = ["--quiet"]
+
+[formatter.taplo]
+command = "taplo"
+includes = ["*.toml"]
+options = ["fmt"]
+
+[formatter.robotidy]
+command = "robotidy"
+includes = ["*.robot", "*.resource"]
+options = ["--verbose", "--target-version", "rf7"]
+
+[formatter.prettier-js]
+command = "prettier"
+includes = ["*.js"]
+options = ["--write"]
+
+[formatter.prettier-typescript]
+command = "prettier"
+includes = ["*.ts"]
+options = ["--write"]
+
+[formatter.prettier-json]
+command = "prettier"
+includes = ["*.json"]
+options = ["--write"]
+
+[formatter.prettier-yaml]
+command = "prettier"
+includes = ["*.yml", "*.yaml"]
+options = ["--write"]
+
+[formatter.prettier-markdown]
+command = "prettier"
+includes = ["*.md"]
+options = ["--write", "--parser", "markdown"]
