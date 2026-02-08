@@ -7,12 +7,17 @@ from typing import Any, Generator, Iterable, Sequence, Union, cast
 
 
 def _glob_pattern_to_re(pattern: str) -> str:
+    """
+    Convert a glob pattern to a regular expression with safeguards against catastrophic backtracking.
+    In particular, avoid nested-quantifier expansions for the globstar ("**").
+    """
     result = "(?ms)^"
 
     in_group = False
-
     i = 0
-    while i < len(pattern):
+    L = len(pattern)
+
+    while i < L:
         c = pattern[i]
 
         if c in "\\/$^+.()=!|":
@@ -31,25 +36,36 @@ def _glob_pattern_to_re(pattern: str) -> str:
             if in_group:
                 result += "|"
             else:
-                result += "\\" + c
+                # literal comma
+                result += "\\,"
         elif c == "*":
             prev_char = pattern[i - 1] if i > 0 else None
             star_count = 1
 
-            while (i + 1) < len(pattern) and pattern[i + 1] == "*":
+            # Count consecutive stars
+            while (i + 1) < L and pattern[i + 1] == "*":
                 star_count += 1
                 i += 1
 
-            next_char = pattern[i + 1] if (i + 1) < len(pattern) else None
-
+            next_char = pattern[i + 1] if (i + 1) < L else None
             is_globstar = (
                 star_count > 1 and (prev_char is None or prev_char == "/") and (next_char is None or next_char == "/")
             )
 
             if is_globstar:
-                result += "((?:[^/]*(?:/|$))*)"
-                i += 1
+                if next_char == "/":
+                    # Skip the slash in the glob pattern
+                    i += 1
+                    # Collapse adjacent "**/" runs into a single matcher
+                    while (i + 3) < L and pattern[i] == "*" and pattern[i + 1] == "*" and pattern[i + 2] == "/":
+                        i += 3
+                    # Zero or more complete directory segments (non-nested)
+                    result += "(?:[^/]+/)*"
+                else:
+                    # Trailing "**" — match any remaining characters
+                    result += ".*"
             else:
+                # Single "*"
                 result += "([^/]*)"
         else:
             result += c
@@ -57,7 +73,6 @@ def _glob_pattern_to_re(pattern: str) -> str:
         i += 1
 
     result += "$"
-
     return result
 
 
