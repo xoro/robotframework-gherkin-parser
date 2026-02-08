@@ -29,10 +29,20 @@ def main() -> None:
 
     version.major, version.minor
 
+    # Fix: Use argument list instead of shell=True to prevent command injection
     run(
-        "mike deploy --push --update-aliases --rebase --force "
-        f'--title "v{version.major}.{version.minor}.x ({alias})" {version.major}.{version.minor} {alias}',
-        shell=True,
+        [
+            "mike",
+            "deploy",
+            "--push",
+            "--update-aliases",
+            "--rebase",
+            "--force",
+            "--title",
+            f"v{version.major}.{version.minor}.x ({alias})",
+            f"{version.major}.{version.minor}",
+            alias,
+        ]
     ).check_returncode()
 
 

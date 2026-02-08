@@ -10,19 +10,45 @@ def main() -> None:
 
     shutil.rmtree("./bundled/libs", ignore_errors=True)
 
+    # Fix: Use argument lists instead of shell=True to prevent command injection
     run(
-        "pip --disable-pip-version-check install -U -t ./bundled/libs --no-cache-dir --implementation py "
-        "--only-binary=:all: --no-binary=:none: -r ./bundled_requirements.txt",
-        shell=True,
+        [
+            "pip",
+            "--disable-pip-version-check",
+            "install",
+            "-U",
+            "-t",
+            "./bundled/libs",
+            "--no-cache-dir",
+            "--implementation",
+            "py",
+            "--only-binary=:all:",
+            "--no-binary=:none:",
+            "-r",
+            "./bundled_requirements.txt",
+        ]
     ).check_returncode()
 
-    packages = [f"-e {path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
+    packages = [f"{path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
 
-    run(
-        "pip --disable-pip-version-check "
-        f"install -U -t ./bundled/libs --no-cache-dir --implementation py --no-deps {' '.join(packages)} -e .",
-        shell=True,
-    ).check_returncode()
+    # Build command with package paths as separate arguments
+    pip_args = [
+        "pip",
+        "--disable-pip-version-check",
+        "install",
+        "-U",
+        "-t",
+        "./bundled/libs",
+        "--no-cache-dir",
+        "--implementation",
+        "py",
+        "--no-deps",
+    ]
+    for pkg in packages:
+        pip_args.extend(["-e", pkg])
+    pip_args.extend(["-e", "."])
+
+    run(pip_args).check_returncode()
 
 
 if __name__ == "__main__":

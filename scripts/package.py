@@ -27,29 +27,54 @@ def main() -> None:
     if not dist_path.exists():
         dist_path.mkdir()
 
+    # Fix: Use argument lists instead of shell=True to prevent command injection
     packages = [f"{path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
     for package in packages:
-        run(f"hatch -e build build {dist_path}", shell=True, cwd=package).check_returncode()
+        run(["hatch", "-e", "build", "build", str(dist_path)], cwd=package).check_returncode()
 
-    run(f"hatch -e build build {dist_path}", shell=True).check_returncode()
+    run(["hatch", "-e", "build", "build", str(dist_path)]).check_returncode()
 
     shutil.rmtree("./bundled/libs", ignore_errors=True)
 
     run(
-        "pip --disable-pip-version-check install -U -t ./bundled/libs --no-cache-dir --implementation py "
-        "--only-binary=:all: --no-binary=:none: -r ./bundled_requirements.txt",
-        shell=True,
+        [
+            "pip",
+            "--disable-pip-version-check",
+            "install",
+            "-U",
+            "-t",
+            "./bundled/libs",
+            "--no-cache-dir",
+            "--implementation",
+            "py",
+            "--only-binary=:all:",
+            "--no-binary=:none:",
+            "-r",
+            "./bundled_requirements.txt",
+        ]
     ).check_returncode()
 
-    run(
-        "pip --disable-pip-version-check "
-        f"install -U -t ./bundled/libs --no-cache-dir --implementation py --no-deps {' '.join(packages)} .",
-        shell=True,
-    ).check_returncode()
+    pip_args = [
+        "pip",
+        "--disable-pip-version-check",
+        "install",
+        "-U",
+        "-t",
+        "./bundled/libs",
+        "--no-cache-dir",
+        "--implementation",
+        "py",
+        "--no-deps",
+    ]
+    pip_args.extend(packages)
+    pip_args.append(".")
+    run(pip_args).check_returncode()
 
-    run(
-        f"npx vsce package {'--pre-release' if PRE_RELEASE or get_version().prerelease else ''} -o ./dist", shell=True
-    ).check_returncode()
+    vsce_args = ["npx", "vsce", "package"]
+    if PRE_RELEASE or get_version().prerelease:
+        vsce_args.append("--pre-release")
+    vsce_args.extend(["-o", "./dist"])
+    run(vsce_args).check_returncode()
 
 
 if __name__ == "__main__":

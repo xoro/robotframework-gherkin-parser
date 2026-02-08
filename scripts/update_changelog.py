@@ -18,12 +18,21 @@ if __name__ == "__main__" and not __package__:
 
 
 from scripts.tools import get_version
+from typing import Sequence
 
 
-def run(title: str, *args: Any, **kwargs: Any) -> None:
+def run(title: str, args: Sequence[str], **kwargs: Any) -> None:
+    """Execute a command safely without shell interpretation.
+    
+    Args:
+        title: Description of the command for logging
+        args: Command and arguments as a list/sequence
+        **kwargs: Additional arguments to pass to subprocess.run
+    """
     try:
         print(f"running {title}")
-        subprocess.run(*args, **kwargs)
+        kwargs.setdefault("check", True)
+        subprocess.run(args, **kwargs)
     except (SystemExit, KeyboardInterrupt):
         raise
     except BaseException as e:
@@ -33,10 +42,10 @@ def run(title: str, *args: Any, **kwargs: Any) -> None:
 def main() -> None:
     current_version = get_version()
 
+    # Fix: Use argument list instead of shell=True to prevent command injection
     run(
         "create changelog",
-        f"git-cliff --bump -t v{current_version} -o CHANGELOG.md",
-        shell=True,
+        ["git-cliff", "--bump", "-t", f"v{current_version}", "-o", "CHANGELOG.md"],
         timeout=600,
     )
 

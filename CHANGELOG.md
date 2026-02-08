@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.4.6] - 2026-02-08
+
+### Security Fixes
+
+- **CRITICAL**: Fix command injection vulnerabilities in CI/release scripts via shell=True (VULN-0001, CVSS 7.8 HIGH)
+  - **scripts/publish.py**: Environment variables (PYPI_USERNAME/PYPI_PASSWORD) interpolated into shell commands
+  - **scripts/deploy_docs.py, install_bundled_editable.py, package.py, install_packages.py, update_changelog.py**: All hardened
+  - Fix: Replace subprocess shell=True with safe argument lists (shell=False)
+  - Pass credentials and paths as separate arguments instead of interpolated strings
+  - Impact: Prevents arbitrary command execution, credential exfiltration, artifact tampering in CI/release pipelines
+  - Note: Runtime library (GherkinParser, gurke) was not vulnerable; issue confined to developer/CI scripts
+
 ## [0.4.5] - 2026-02-08
 
 ### Chore

@@ -7,20 +7,28 @@ def main() -> None:
     if not dist_path.exists():
         dist_path.mkdir()
 
+    # Fix: Use argument lists instead of shell=True to prevent command injection
     run(
-        "pip --disable-pip-version-check install -U -r ./bundled_requirements.txt",
-        shell=True,
+        [
+            "pip",
+            "--disable-pip-version-check",
+            "install",
+            "-U",
+            "-r",
+            "./bundled_requirements.txt",
+        ]
     ).check_returncode()
 
-    packages = [f"-e {path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
+    packages = [f"{path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
 
     if not packages:
         return
 
-    run(
-        f"pip --disable-pip-version-check install --no-deps -U {' '.join(packages)}",
-        shell=True,
-    ).check_returncode()
+    pip_args = ["pip", "--disable-pip-version-check", "install", "--no-deps", "-U"]
+    for pkg in packages:
+        pip_args.extend(["-e", pkg])
+
+    run(pip_args).check_returncode()
 
 
 if __name__ == "__main__":
