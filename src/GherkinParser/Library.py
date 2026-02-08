@@ -1,5 +1,6 @@
 from itertools import chain
 from typing import Any, Iterator, List, Tuple, Union
+import os
 
 from robot import result, running
 from robot.api.deco import library
@@ -16,8 +17,12 @@ class Library(ListenerV3):
     def __init__(self) -> None:
         self.ROBOT_LIBRARY_LISTENER = self
         self._in_call_hooks = False
+        # Security hardening: disable hook auto-execution by default; opt-in via env var.
+        self._hooks_enabled = os.getenv("GHERKIN_PARSER_ENABLE_HOOKS", "0").lower() in ("1", "true", "yes", "on")
 
     def call_hooks(self, events: Union[str, Tuple[str, ...]], *args: Any, **kwargs: Any) -> None:
+        if not self._hooks_enabled:
+            return
         if self._in_call_hooks:
             return
 
@@ -50,6 +55,8 @@ class Library(ListenerV3):
             self._in_call_hooks = False
 
     def yield_hooks(self, events: Union[str, Tuple[str, ...]], *args: Any, **kwargs: Any) -> Iterator[str]:
+        if not self._hooks_enabled:
+            return
         if isinstance(events, str):
             events = (events,)
         ctx = EXECUTION_CONTEXTS.current
@@ -70,6 +77,8 @@ class Library(ListenerV3):
     def _create_setup_and_teardown(
         self, data: Union[running.TestSuite, running.TestCase], events: Union[str, Tuple[str, ...]]
     ) -> None:
+        if not self._hooks_enabled:
+            return
         if isinstance(events, str):
             events = (events,)
 
@@ -106,7 +115,7 @@ class Library(ListenerV3):
 
         if kws:
             if data.teardown.name:
-                data.setup.config(
+                data.teardown.config(
                     name="BuiltIn.Run Keywords",
                     args=(*kws, "AND", data.teardown.name, *data.teardown.args),
                     lineno = lineno

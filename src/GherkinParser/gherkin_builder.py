@@ -1,5 +1,6 @@
 import ast
 import re
+import os
 from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -161,7 +162,11 @@ def build_gherkin_model(source: PathLike[str], content: Optional[str] = None) ->
                 test_case.header.tokens[0].col_offset = location.column - 1
             test_cases.append(test_case)
 
-        resources = [f for f in iter_files(path.parent, "**/*.resource") if not f.stem.startswith(("_", "."))]
+        # Security hardening: disable automatic resource imports by default.
+        auto_import = os.getenv("GHERKIN_PARSER_AUTO_IMPORT_RESOURCES", "0").lower() in ("1", "true", "yes", "on")
+        resources: List[Path] = []
+        if auto_import:
+            resources = [f for f in iter_files(path.parent, "**/*.resource") if not f.stem.startswith(("_", "."))]
 
         doc = gherkin_document["feature"]["description"].strip()
         settings = [
