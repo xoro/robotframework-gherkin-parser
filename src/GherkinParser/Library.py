@@ -27,7 +27,8 @@ class Library(ListenerV3):
             return
 
         errored = False
-        self._in_call_hooks = False
+        # Fix VULN-0001 (a4a1): Set reentrancy guard to prevent infinite recursion
+        self._in_call_hooks = True
         try:
             if isinstance(events, str):
                 events = (events,)

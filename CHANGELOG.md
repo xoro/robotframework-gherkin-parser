@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.4.4] - 2026-02-08
+
+### Security Fixes
+
+- **Library:** Fix reentrancy guard in `call_hooks()` to prevent infinite recursion DoS
+  - The guard variable `_in_call_hooks` was checked but never set to True, rendering protection ineffective
+  - When hooks enabled, a hook calling back into hook processing could cause unbounded recursion
+  - Impact: CPU exhaustion, test runner crash, CI/CD pipeline disruption
+  - Mitigation: Guard now correctly activates upon entry (set to True) and resets in finally block
+  - Added comprehensive test suite validating reentrancy protection in all scenarios
+  - Note: Only affects configurations with `GHERKIN_PARSER_ENABLE_HOOKS=1` (disabled by default)
+  - **CVSS 5.5 (Medium severity)**
+
 ## [0.4.3] - 2026-02-08
 
 ### Security Fixes
