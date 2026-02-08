@@ -79,6 +79,77 @@ GherkinParser=[]
 
 NOT IMPLEMENTED YET: ~~You can enable the GherkinParser by the VSCode Setting: `robotcode.robot.parsers`~~
 
+## Security and Configuration
+
+### ⚠️ Breaking Changes in v0.4.2+
+
+For security reasons, **automatic resource import** and **hook execution** are now **disabled by default** to prevent arbitrary code execution vulnerabilities. These features must be explicitly enabled via environment variables in trusted environments only.
+
+### Environment Variables
+
+#### `GHERKIN_PARSER_ENABLE_HOOKS`
+
+Controls whether keywords tagged with `hook:*` (e.g., `hook:before-suite`, `hook:before-test`) are automatically executed during test suite initialization.
+
+- **Default**: `0` (disabled)
+- **Values**: `1`, `true`, `yes`, `on` to enable
+- **Security Impact**: When enabled, any keyword tagged with a hook prefix will execute automatically without explicit reference in feature files. Only enable in fully trusted test environments.
+
+**Example:**
+```bash
+# Enable hook execution (trusted environment only)
+export GHERKIN_PARSER_ENABLE_HOOKS=1
+robot --parser GherkinParser features/
+```
+
+#### `GHERKIN_PARSER_AUTO_IMPORT_RESOURCES`
+
+Controls whether `.resource` files are automatically discovered and imported from the feature file directory tree.
+
+- **Default**: `0` (disabled)
+- **Values**: `1`, `true`, `yes`, `on` to enable
+- **Security Impact**: When enabled, all `.resource` files under the feature directory are automatically imported. Only enable in trusted project directories.
+
+**Example:**
+```bash
+# Enable automatic resource import (trusted environment only)
+export GHERKIN_PARSER_AUTO_IMPORT_RESOURCES=1
+robot --parser GherkinParser features/
+```
+
+#### Combined Usage
+
+```bash
+# Enable both features (trusted environment only)
+export GHERKIN_PARSER_ENABLE_HOOKS=1
+export GHERKIN_PARSER_AUTO_IMPORT_RESOURCES=1
+robot --parser GherkinParser features/
+```
+
+### Security Best Practices
+
+1. **Default Behavior is Secure**: The parser is secure by default - dangerous features are opt-in only
+2. **Trusted Environments Only**: Only enable these features in controlled, trusted test environments
+3. **CI/CD Considerations**: Be cautious when enabling these features in CI/CD pipelines that process external contributions
+4. **Explicit Resource Imports**: When auto-import is disabled, explicitly import resources in your feature files using Robot Framework's `Resource` setting
+5. **Manual Hook Invocation**: When hooks are disabled, explicitly call setup/teardown keywords in your test suites
+
+### Migration from v0.4.1 and Earlier
+
+If you were relying on automatic resource import or hook execution:
+
+1. **Review your test setup** to understand which features you were using
+2. **Enable the required features** via environment variables in your test execution environment
+3. **Consider refactoring** to use explicit imports and setup/teardown for better clarity and security
+
+### Additional Security Improvements (v0.4.3+)
+
+- **Symlink Protection**: Directory symlinks are skipped by default during file discovery to prevent infinite loop attacks via symlink cycles
+- **Cycle Detection**: When symlink following is explicitly enabled, visited directories are tracked to prevent infinite loops
+- **Depth Limiting**: Optional maximum recursion depth can be configured programmatically for additional safety
+
+These protections ensure the parser can safely scan untrusted directory structures without risk of denial-of-service via crafted filesystem layouts.
+
 ## Examples
 
 The following example demonstrates a simple Gherkin feature file that can be executed using the **Robot Framework Gherkin Parser**:

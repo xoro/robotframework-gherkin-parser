@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.4.3] - 2026-02-08
+
+### Security Fixes
+
+- **glob_path:** Eliminate symlink-induced DoS in `iter_files` ([c455f44](https://github.com/xoro/robotframework-gherkin-parser/commit/c455f44))
+  - Add `follow_symlinks` parameter (default: False) to skip symlinked directories
+  - Implement cycle detection via visited set keyed by (device, inode)
+  - Add optional `max_depth` parameter to bound recursion depth
+  - File symlinks still work (only directory symlinks are skipped)
+  - Prevents infinite loops from self-referential or cross-directory symlink cycles
+  - **CVSS 5.5 (Medium severity)**
+
+### Chore
+
+- Update package-lock.json to version 0.4.3 ([75934d8](https://github.com/xoro/robotframework-gherkin-parser/commit/75934d8))
+
+## [0.4.2] - 2026-02-08
+
+### Security Fixes
+
+- **Library, gherkin_builder:** Eliminate arbitrary keyword execution vulnerability ([05fe716](https://github.com/xoro/robotframework-gherkin-parser/commit/05fe716))
+  - **BREAKING CHANGE**: Hooks and auto-import now disabled by default (secure-by-default)
+  - Add `GHERKIN_PARSER_ENABLE_HOOKS` env var to control hook execution
+  - Add `GHERKIN_PARSER_AUTO_IMPORT_RESOURCES` env var to control auto-import
+  - Fix teardown configuration bug (was incorrectly using `data.setup.config`)
+  - Prevents arbitrary keyword execution via hook-tagged keywords
+  - Prevents unintended resource file auto-imports
+  - Eliminates RCE vector in CI/CD and shared test environments
+  - **CVSS 9.8 (Critical severity)**
+
+## [0.4.1] - 2026-02-08
+
+### Security Fixes
+
+- **glob_path:** Eliminate ReDoS vulnerability in glob pattern conversion ([ccafb75](https://github.com/xoro/robotframework-gherkin-parser/commit/ccafb75))
+  - Replace nested quantifier pattern `((?:[^/]*(?:/|$))*)` with non-nested `(?:[^/]+/)*`
+  - Prevents catastrophic backtracking on multi-globstar patterns like `/**/**/**/a`
+  - Add comprehensive test suite validating fix and performance
+  - **CVSS 6.2 (Medium severity)**
+
 ## [0.3.2](https://github.com/d-biehl/robotframework-gherkin-parser/compare/v0.3.1..v0.3.2) - 2024-02-05
 
 ### Bug Fixes
