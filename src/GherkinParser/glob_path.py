@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Generator, Iterable, Sequence, Union, cast
+from typing import Any, Generator, Iterable, Optional, Sequence, Set, Tuple, Union, cast
 
 
 def _glob_pattern_to_re(pattern: str) -> str:
@@ -103,16 +103,50 @@ def iter_files(
     ignore_patterns: Union[Sequence[Union[Pattern, str]], Pattern, str, None] = None,
     *,
     absolute: bool = False,
+    follow_symlinks: bool = False,
+    max_depth: Optional[int] = None,
     _base_path: Union[Path, str, os.PathLike[str], None] = None,
+    _depth: int = 0,
+    _visited: Optional[Set[Tuple[int, int]]] = None,
 ) -> Generator[Path, None, None]:
+    """
+    Recursively iterate over files in a directory tree.
+    
+    Args:
+        path: Root path to scan
+        patterns: Glob patterns to match files (None = all files)
+        ignore_patterns: Glob patterns to ignore
+        absolute: Return absolute paths
+        follow_symlinks: Follow symlinked directories (default: False for security)
+        max_depth: Maximum recursion depth (None = unlimited)
+        _base_path: Internal - base path for relative matching
+        _depth: Internal - current recursion depth
+        _visited: Internal - set of visited directory identifiers to prevent cycles
+    """
     if not isinstance(path, Path):
         path = Path(path or ".")
 
     if _base_path is None:
         _base_path = path
-    else:
-        if not isinstance(_base_path, Path):
-            path = Path(_base_path)
+    elif not isinstance(_base_path, Path):
+        _base_path = Path(_base_path)
+
+    # Initialize visited set and record current directory to prevent cycles
+    if _visited is None:
+        _visited = set()
+    try:
+        st = path.stat()
+        key = (st.st_dev, st.st_ino)
+        if key in _visited:
+            return
+        _visited.add(key)
+    except OSError:
+        # If we can't stat the path, skip it gracefully
+        pass
+
+    # Optional depth guard against excessively deep recursion
+    if max_depth is not None and _depth >= max_depth:
+        return
 
     if patterns is not None and isinstance(patterns, (str, Pattern)):
         patterns = [patterns]
@@ -126,15 +160,33 @@ def iter_files(
 
     try:
         for f in path.iterdir():
+            # Skip symlinked directories unless explicitly allowed (file symlinks are OK)
+            try:
+                if not follow_symlinks and f.is_symlink() and f.is_dir():
+                    continue
+            except OSError:
+                continue
+
             if ignore_patterns is None or not any(
                 p.matches(f.relative_to(_base_path)) for p in cast(Iterable[Pattern], ignore_patterns)
             ):
                 if f.is_dir():
-                    for e in iter_files(f, patterns, ignore_patterns, absolute=absolute, _base_path=_base_path):
+                    for e in iter_files(
+                        f,
+                        patterns,
+                        ignore_patterns,
+                        absolute=absolute,
+                        follow_symlinks=follow_symlinks,
+                        max_depth=max_depth,
+                        _base_path=_base_path,
+                        _depth=_depth + 1,
+                        _visited=_visited,
+                    ):
                         yield e
                 elif patterns is None or any(
                     p.matches(str(f.relative_to(_base_path))) for p in cast(Iterable[Pattern], patterns)
                 ):
                     yield f.absolute() if absolute else f
-    except PermissionError:
+    except (PermissionError, OSError):
+        # Gracefully skip unreadable directories
         pass
