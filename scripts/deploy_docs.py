@@ -29,9 +29,11 @@ def main() -> None:
 
     version.major, version.minor
 
-    # Fix: Use argument list instead of shell=True to prevent command injection
+    # Fix PATH hijack: Use sys.executable -m mike to avoid PATH resolution
     run(
         [
+            sys.executable,
+            "-m",
             "mike",
             "deploy",
             "--push",

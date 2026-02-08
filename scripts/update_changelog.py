@@ -19,11 +19,12 @@ if __name__ == "__main__" and not __package__:
 
 from scripts.tools import get_version
 from typing import Sequence
+import shutil
 
 
 def run(title: str, args: Sequence[str], **kwargs: Any) -> None:
     """Execute a command safely without shell interpretation.
-    
+
     Args:
         title: Description of the command for logging
         args: Command and arguments as a list/sequence
@@ -42,10 +43,14 @@ def run(title: str, args: Sequence[str], **kwargs: Any) -> None:
 def main() -> None:
     current_version = get_version()
 
-    # Fix: Use argument list instead of shell=True to prevent command injection
+    # Fix PATH hijack: Resolve git-cliff to absolute path to avoid PATH resolution
+    git_cliff = shutil.which("git-cliff")
+    if not git_cliff:
+        raise RuntimeError("git-cliff not found in PATH")
+
     run(
         "create changelog",
-        ["git-cliff", "--bump", "-t", f"v{current_version}", "-o", "CHANGELOG.md"],
+        [git_cliff, "--bump", "-t", f"v{current_version}", "-o", "CHANGELOG.md"],
         timeout=600,
     )
 

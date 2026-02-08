@@ -1,4 +1,5 @@
 import shutil
+import sys
 from pathlib import Path
 from subprocess import run
 
@@ -10,9 +11,11 @@ def main() -> None:
 
     shutil.rmtree("./bundled/libs", ignore_errors=True)
 
-    # Fix: Use argument lists instead of shell=True to prevent command injection
+    # Fix PATH hijack: Use sys.executable -m pip to avoid PATH resolution
     run(
         [
+            sys.executable,
+            "-m",
             "pip",
             "--disable-pip-version-check",
             "install",
@@ -33,6 +36,8 @@ def main() -> None:
 
     # Build command with package paths as separate arguments
     pip_args = [
+        sys.executable,
+        "-m",
         "pip",
         "--disable-pip-version-check",
         "install",

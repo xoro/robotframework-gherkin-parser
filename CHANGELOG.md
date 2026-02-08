@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.4.7] - 2026-02-08
+
+### Security Fixes
+
+- **CRITICAL**: Fix PATH hijack vulnerabilities in CI/maintainer scripts (VULN-0001, CVSS 8.8 HIGH)
+  - **Root cause**: Scripts invoked external tools using unqualified names (pip, mike, git-cliff, npx, hatch) resolved via PATH
+  - **Affected scripts**: scripts/install_packages.py, install_bundled_editable.py, deploy_docs.py, update_changelog.py, publish.py, package.py
+  - **Attack vector**: Attacker-controlled PATH prepended with malicious executables enables arbitrary command execution in CI/maintainer environments
+  - **Fix**: 
+    - Python tools (pip, hatch): Use sys.executable -m <tool> to invoke as modules (bypasses PATH)
+    - External tools (npx, git-cliff): Use shutil.which() with runtime validation before subprocess invocation
+    - Add explicit error handling for missing tools
+  - **Impact**: Prevents arbitrary command execution, credential exfiltration, package tampering in release pipelines
+  - **Note**: Runtime library (GherkinParser, gurke) was not vulnerable; issue confined to CI/maintainer scripts
+  - **Previous fix (0.4.6)**: Addressed command injection via shell=True but left PATH resolution vulnerable
+
 ## [0.4.6] - 2026-02-08
 
 ### Security Fixes

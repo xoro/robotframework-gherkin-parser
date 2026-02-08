@@ -1,5 +1,6 @@
 from pathlib import Path
 from subprocess import run
+import sys
 
 
 def main() -> None:
@@ -7,9 +8,11 @@ def main() -> None:
     if not dist_path.exists():
         dist_path.mkdir()
 
-    # Fix: Use argument lists instead of shell=True to prevent command injection
+    # Fix PATH hijack: Use sys.executable -m pip to avoid PATH resolution
     run(
         [
+            sys.executable,
+            "-m",
             "pip",
             "--disable-pip-version-check",
             "install",
@@ -24,7 +27,7 @@ def main() -> None:
     if not packages:
         return
 
-    pip_args = ["pip", "--disable-pip-version-check", "install", "--no-deps", "-U"]
+    pip_args = [sys.executable, "-m", "pip", "--disable-pip-version-check", "install", "--no-deps", "-U"]
     for pkg in packages:
         pip_args.extend(["-e", pkg])
 

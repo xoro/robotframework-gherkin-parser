@@ -27,17 +27,20 @@ def main() -> None:
     if not dist_path.exists():
         dist_path.mkdir()
 
-    # Fix: Use argument lists instead of shell=True to prevent command injection
+    # Fix PATH hijack: Use sys.executable -m hatch to avoid PATH resolution
     packages = [f"{path}" for path in Path("./packages").iterdir() if (path / "pyproject.toml").exists()]
     for package in packages:
-        run(["hatch", "-e", "build", "build", str(dist_path)], cwd=package).check_returncode()
+        run([sys.executable, "-m", "hatch", "-e", "build", "build", str(dist_path)], cwd=package).check_returncode()
 
-    run(["hatch", "-e", "build", "build", str(dist_path)]).check_returncode()
+    run([sys.executable, "-m", "hatch", "-e", "build", "build", str(dist_path)]).check_returncode()
 
     shutil.rmtree("./bundled/libs", ignore_errors=True)
 
+    # Fix PATH hijack: Use sys.executable -m pip to avoid PATH resolution
     run(
         [
+            sys.executable,
+            "-m",
             "pip",
             "--disable-pip-version-check",
             "install",
@@ -55,6 +58,8 @@ def main() -> None:
     ).check_returncode()
 
     pip_args = [
+        sys.executable,
+        "-m",
         "pip",
         "--disable-pip-version-check",
         "install",
@@ -70,7 +75,12 @@ def main() -> None:
     pip_args.append(".")
     run(pip_args).check_returncode()
 
-    vsce_args = ["npx", "vsce", "package"]
+    # Fix PATH hijack: Resolve npx to absolute path to avoid PATH resolution
+    npx = shutil.which("npx")
+    if not npx:
+        raise RuntimeError("npx not found in PATH")
+
+    vsce_args = [npx, "vsce", "package"]
     if PRE_RELEASE or get_version().prerelease:
         vsce_args.append("--pre-release")
     vsce_args.extend(["-o", "./dist"])
