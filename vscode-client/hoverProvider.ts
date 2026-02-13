@@ -165,9 +165,20 @@ export class GherkinHoverProvider implements vscode.HoverProvider {
           } else if (currentKeywordInfo) {
             // Parse keyword settings
             if (trimmedLine.startsWith("[Documentation]")) {
-              const docMatch = trimmedLine.match(/\[Documentation\]\s*(.+)/);
+              const docMatch = trimmedLine.match(/\[Documentation\]\s*(.*)/);
               if (docMatch) {
                 currentKeywordInfo.documentation = docMatch[1];
+              }
+              // Collect continuation lines (...) that follow
+              for (let j = i + 1; j < lines.length; j++) {
+                const contLine = lines[j].trim();
+                if (contLine.startsWith("...")) {
+                  const contText = contLine.replace(/^\.\.\./, "").trim();
+                  currentKeywordInfo.documentation += "\n" + contText;
+                  i = j; // advance outer loop past continuation lines
+                } else {
+                  break;
+                }
               }
             } else if (trimmedLine.startsWith("[Arguments]")) {
               const argsMatch = trimmedLine.match(/\[Arguments\]\s*(.+)/);

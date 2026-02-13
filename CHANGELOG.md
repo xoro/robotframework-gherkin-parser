@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.5.1] - 2026-02-13
+
+### Features
+
+- Add Find All References for resource file keywords (Shift+F12 on keyword in .resource file shows usages in .feature files)
+- Closest-folder filtering to avoid duplicate references from repo copies
+- Multi-line `[Documentation]` support in hover (collects `...` continuation lines)
+
 ## [0.5.0] - 2025-06-17
 
 ### Features
