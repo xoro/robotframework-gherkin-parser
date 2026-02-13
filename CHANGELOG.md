@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.5.0] - 2025-06-17
+
+### Features
+
+- Custom Gherkin formatter with configurable per-keyword indentation
+- Three indentation profiles: `gherkinDefault`, `scs`, and `custom`
+- VS Code settings for profile selection and custom indentation JSON object
+- Preserve blank lines between header comments and Feature keyword
+
 ## [0.4.7] - 2026-02-08
 
 ### Security Fixes

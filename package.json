@@ -4,7 +4,7 @@
   "description": "GherkinParser Support for RobotCode and Robot Framework with Go to Definition",
   "icon": "icons/icon.png",
   "publisher": "d-biehl",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "author": {
     "name": "Daniel Biehl",
     "url": "https://github.com/d-biehl/"
@@ -127,7 +127,60 @@
         "language": "markdown",
         "when": "resourceFilename =~ /^.*\\.feature\\.md$/"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Gherkin Formatting",
+      "properties": {
+        "gherkinParser.format.indentation.profile": {
+          "type": "string",
+          "default": "scs",
+          "order": 0,
+          "enum": ["gherkinDefault", "scs", "custom"],
+          "enumDescriptions": [
+            "Standard Cucumber indentation (uniform 2-space levels for all keywords)",
+            "SCS profile (Given: 4, When/Then: 5, And/But: 6 - aligned for visual clarity)",
+            "Custom - configure indentation for each keyword via the setting below"
+          ],
+          "description": "Select an indentation profile for Gherkin formatting."
+        },
+        "gherkinParser.format.indentation.custom": {
+          "type": "object",
+          "order": 1,
+          "default": {
+            "Feature": 0,
+            "Background": 2,
+            "Scenario": 2,
+            "Step": 4,
+            "Examples": 2,
+            "example": 4,
+            "given": 4,
+            "when": 5,
+            "then": 5,
+            "and": 6,
+            "but": 6,
+            "featureTag": 0,
+            "scenarioTag": 2
+          },
+          "markdownDescription": "Custom indentation values (only used when profile is `custom`). Edit in `settings.json` to configure.",
+          "properties": {
+            "Feature": { "type": "number", "minimum": 0, "description": "Spaces before the Feature keyword" },
+            "Background": { "type": "number", "minimum": 0, "description": "Spaces before the Background keyword" },
+            "Scenario": { "type": "number", "minimum": 0, "description": "Spaces before the Scenario keyword" },
+            "Step": { "type": "number", "minimum": 0, "description": "Default spaces before step keywords (fallback)" },
+            "Examples": { "type": "number", "minimum": 0, "description": "Spaces before the Examples keyword" },
+            "example": { "type": "number", "minimum": 0, "description": "Spaces before example table rows" },
+            "given": { "type": "number", "minimum": 0, "description": "Spaces before Given steps" },
+            "when": { "type": "number", "minimum": 0, "description": "Spaces before When steps" },
+            "then": { "type": "number", "minimum": 0, "description": "Spaces before Then steps" },
+            "and": { "type": "number", "minimum": 0, "description": "Spaces before And steps" },
+            "but": { "type": "number", "minimum": 0, "description": "Spaces before But steps" },
+            "featureTag": { "type": "number", "minimum": 0, "description": "Spaces before feature-level tags" },
+            "scenarioTag": { "type": "number", "minimum": 0, "description": "Spaces before scenario-level tags" }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production",
