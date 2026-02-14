@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any, Generator, Iterable, Optional, Sequence, Set, Tuple, Union, cast
 
 
+_MAX_SINGLE_STARS = 10
+
+
 def _glob_pattern_to_re(pattern: str) -> str:
     """
     Convert a glob pattern to a regular expression with safeguards against catastrophic backtracking.
@@ -16,6 +19,7 @@ def _glob_pattern_to_re(pattern: str) -> str:
     in_group = False
     i = 0
     L = len(pattern)
+    single_star_count = 0
 
     while i < L:
         c = pattern[i]
@@ -65,8 +69,14 @@ def _glob_pattern_to_re(pattern: str) -> str:
                     # Trailing "**" — match any remaining characters
                     result += ".*"
             else:
-                # Single "*"
-                result += "([^/]*)"
+                # Single "*" — non-capturing to reduce backtracking overhead
+                single_star_count += 1
+                if single_star_count > _MAX_SINGLE_STARS:
+                    raise ValueError(
+                        f"Glob pattern contains too many '*' wildcards "
+                        f"({single_star_count} > {_MAX_SINGLE_STARS}): {pattern!r}"
+                    )
+                result += "[^/]*"
         else:
             result += c
 
@@ -163,16 +173,17 @@ def iter_files(
         resolved_base = Path(_base_path).resolve()
 
         for f in path.iterdir():
-            # Skip symlinked directories unless explicitly allowed
+            # When follow_symlinks is disabled, apply boundary check to ALL
+            # symlinks — not just those whose targets are regular files or
+            # directories.  Symlinks to character/block devices, FIFOs, or
+            # sockets have is_file()==False and is_dir()==False, so the
+            # previous type-specific checks missed them entirely.
             try:
-                if not follow_symlinks and f.is_symlink() and f.is_dir():
-                    continue
-            except OSError:
-                continue
-
-            # Skip file symlinks whose targets resolve outside the scan root
-            try:
-                if not follow_symlinks and f.is_symlink() and f.is_file():
+                if not follow_symlinks and f.is_symlink():
+                    # Always skip symlinked directories
+                    if f.is_dir():
+                        continue
+                    # For all other symlinks, enforce the boundary check
                     resolved_target = f.resolve()
                     if not str(resolved_target).startswith(str(resolved_base) + os.sep) and resolved_target != resolved_base:
                         continue

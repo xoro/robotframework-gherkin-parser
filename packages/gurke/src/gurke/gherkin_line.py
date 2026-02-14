@@ -72,7 +72,10 @@ class GherkinLine:
                 cell = ""
                 start_col = col + 1
             elif char == "\\":
-                char = next(row)
+                char = next(row, None)
+                if char is None:
+                    cell += "\\"
+                    break
                 col += 1
                 if char == "n":
                     cell += "\n"

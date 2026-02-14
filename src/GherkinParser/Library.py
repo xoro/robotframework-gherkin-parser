@@ -58,6 +58,8 @@ class Library(ListenerV3):
     def yield_hooks(self, events: Union[str, Tuple[str, ...]], *args: Any, **kwargs: Any) -> Iterator[str]:
         if not self._hooks_enabled:
             return
+        if self._in_call_hooks:
+            return
         if isinstance(events, str):
             events = (events,)
         ctx = EXECUTION_CONTEXTS.current
