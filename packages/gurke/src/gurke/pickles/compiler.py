@@ -146,7 +146,7 @@ class Compiler(object):
             value_cell = value_cells[n]
             # For the case of trailing backslash, re-escaping backslashes are needed
             reescaped_value = re.sub(r"\\", r"\\\\", value_cell["value"])
-            name = re.sub("<{0[value]}>".format(variable_cell), reescaped_value, name)
+            name = re.sub("<{}>".format(re.escape(variable_cell["value"])), reescaped_value, name)
         return name
 
     def _pickle_step(self, step, keyword_type):
