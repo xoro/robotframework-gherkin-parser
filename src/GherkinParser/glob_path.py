@@ -23,7 +23,7 @@ def _glob_pattern_to_re(pattern: str) -> str:
         if c in "\\/$^+.()=!|":
             result += "\\" + c
         elif c == "?":
-            result += "."
+            result += "[^/]"
         elif c in "[]":
             result += c
         elif c == "{":
@@ -159,11 +159,23 @@ def iter_files(
         ignore_patterns = list(map(lambda p: p if isinstance(p, Pattern) else Pattern(p), ignore_patterns))
 
     try:
+        # Resolve the base path once for symlink boundary checks
+        resolved_base = Path(_base_path).resolve()
+
         for f in path.iterdir():
-            # Skip symlinked directories unless explicitly allowed (file symlinks are OK)
+            # Skip symlinked directories unless explicitly allowed
             try:
                 if not follow_symlinks and f.is_symlink() and f.is_dir():
                     continue
+            except OSError:
+                continue
+
+            # Skip file symlinks whose targets resolve outside the scan root
+            try:
+                if not follow_symlinks and f.is_symlink() and f.is_file():
+                    resolved_target = f.resolve()
+                    if not str(resolved_target).startswith(str(resolved_base) + os.sep) and resolved_target != resolved_base:
+                        continue
             except OSError:
                 continue
 
