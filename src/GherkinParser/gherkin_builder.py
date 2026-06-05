@@ -150,8 +150,18 @@ def build_gherkin_model(source: PathLike[str], content: Optional[str] = None) ->
             if len(pickle["astNodeIds"]) > 1:
                 e_node, e_parent = find_ast_node_id(gherkin_document, pickle["astNodeIds"][1])
                 if e_node and "cells" in e_node and e_parent is not None and e_parent["keyword"] == "Examples":
-                    for i, s in enumerate(e_node["cells"]):
-                        test_case_name += f" {e_parent['tableHeader']['cells'][i]['value']} = {s['value']}"
+                    # Append a 1-based row index instead of the raw "key = value"
+                    # parameter pairs. This produces names in the form
+                    # "SCENARIO_NAME 1", "SCENARIO_NAME 2", ... which match the
+                    # pattern SpecSync's CucumberJavaJUnitXml format uses to locate
+                    # the corresponding ADO Test Case: /^NAME( \d+)?$/.
+                    # Appending "key = value" pairs caused SpecSync to silently skip
+                    # all Scenario Outline rows because the name did not match.
+                    row_index = next(
+                        (i + 1 for i, row in enumerate(e_parent.get("tableBody", [])) if row.get("id") == e_node.get("id")),
+                        1,
+                    )
+                    test_case_name += f" {row_index}"
 
             test_case = TestCase(KeywordName.from_params(test_case_name), body=testcase_body)
 
