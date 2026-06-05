@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.3.6] - 2026-06-05
+
+### Bug Fixes
+
+- Scenario Outline test names now use a 1-based row index suffix (` 1`, ` 2`, …)
+  instead of `key = value` parameter pairs. Required for SpecSync
+  `CucumberJavaJUnitXml` result matching: `/^NAME( \d+)?$/`. Previously all
+  Scenario Outline rows were silently skipped because the names did not match.
+- Relax `gurke` dependency to `>=0.3.2` (was `==0.3.5`). `gurke==0.3.5` does
+  not exist on PyPI, causing `pipx inject` to fail with "no solution found".
+- Restore `autoImport` extension setting default to `"1"` (enabled). A previous
+  commit had inadvertently set it to `"0"`, disabling all keyword resolution in
+  Robot Framework resource files.
+
 ## [0.5.1] - 2026-02-13
 
 ### Features
