@@ -172,8 +172,9 @@ def build_gherkin_model(source: PathLike[str], content: Optional[str] = None) ->
                 test_case.header.tokens[0].col_offset = location.column - 1
             test_cases.append(test_case)
 
-        # Security hardening: disable automatic resource imports by default.
-        auto_import = os.getenv("GHERKIN_PARSER_AUTO_IMPORT_RESOURCES", "0").lower() in ("1", "true", "yes", "on")
+        # Auto-import all .resource files found alongside the .feature file.
+        # The env var allows opting out in environments where explicit imports are preferred.
+        auto_import = os.getenv("GHERKIN_PARSER_AUTO_IMPORT_RESOURCES", "1").lower() not in ("0", "false", "no", "off")
         resources: List[Path] = []
         if auto_import:
             resources = [f for f in iter_files(path.parent, "**/*.resource") if not f.stem.startswith(("_", "."))]
