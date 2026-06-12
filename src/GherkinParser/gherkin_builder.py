@@ -175,9 +175,13 @@ def build_gherkin_model(source: PathLike[str], content: Optional[str] = None) ->
         # Auto-import all .resource files found alongside the .feature file.
         # The env var allows opting out in environments where explicit imports are preferred.
         auto_import = os.getenv("GHERKIN_PARSER_AUTO_IMPORT_RESOURCES", "1").lower() not in ("0", "false", "no", "off")
+        # Allow following symlinks to .resource files -- needed when a feature directory
+        # uses a symlink to point to a resource file in a sibling directory.
+        # Disabled by default for security; enable via GHERKIN_PARSER_FOLLOW_SYMLINKS=1.
+        follow_symlinks = os.getenv("GHERKIN_PARSER_FOLLOW_SYMLINKS", "0").lower() in ("1", "true", "yes", "on")
         resources: List[Path] = []
         if auto_import:
-            resources = [f for f in iter_files(path.parent, "**/*.resource") if not f.stem.startswith(("_", "."))]
+            resources = [f for f in iter_files(path.parent, "**/*.resource", follow_symlinks=follow_symlinks) if not f.stem.startswith(("_", "."))]
 
         doc = gherkin_document["feature"]["description"].strip()
         settings = [
